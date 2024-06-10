@@ -69,7 +69,7 @@ dependencyResolutionManagement {
    
 ```kotlin
 [versions]
-dataResult = 1.0.1
+dataResult = 2.0.0
 
 [libraries]
 dataResult = {group = "com.github.alterok", name = "Kotlin-DataResult", version.ref = "dataResult"}
@@ -85,6 +85,6 @@ dependencies{
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the GPL 3.0 License - see the LICENSE file for details.
 
 
