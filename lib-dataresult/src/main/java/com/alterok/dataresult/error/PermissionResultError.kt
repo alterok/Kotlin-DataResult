@@ -2,7 +2,7 @@ package com.alterok.dataresult.error
 
 import com.alterok.dataresult.DataResult
 
-sealed class PermissionResultError(val message: String) : DataResult.Error {
+sealed class PermissionResultError(val message: String) : DataResult.IError {
     data object PermissionDenied : PermissionResultError("Permission denied")
     data object PermissionRevoked : PermissionResultError("Permission revoked")
 

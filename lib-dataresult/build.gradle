@@ -9,6 +9,12 @@ java {
     targetCompatibility = JavaVersion.VERSION_17
 }
 
+compileKotlin{
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+}
+
 publishing {
     publications {
         release(MavenPublication) {
@@ -16,7 +22,7 @@ publishing {
 
             groupId = 'com.github.alterok'
             artifactId = 'kotlin-dataresult'
-            version = 1.0
+            version = 2.0
         }
     }
 }

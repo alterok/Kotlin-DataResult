@@ -2,7 +2,7 @@ package com.alterok.dataresult.error
 
 import com.alterok.dataresult.DataResult
 
-sealed class NetworkResultError(val errorCode: Int) : DataResult.Error {
+sealed class NetworkResultError(val errorCode: Int) : DataResult.IError {
     data object BadRequest : NetworkResultError(400)
     data object Unauthorized : NetworkResultError(401)
     data object Forbidden : NetworkResultError(403)
