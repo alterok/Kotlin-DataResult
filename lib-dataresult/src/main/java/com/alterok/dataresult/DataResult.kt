@@ -1,12 +1,14 @@
 package com.alterok.dataresult
 
 sealed class DataResult<D> {
+    interface IError {
+        fun getErrorMessage() : String
+        override fun toString(): String
+    }
+
     data class Loading<D>(val data: D? = null) : DataResult<D>()
     data class Success<D>(val data: D) : DataResult<D>()
     data class Failure<D, out E : IError>(val error: E, val data: D? = null) : DataResult<D>()
-    interface IError{
-        override fun toString(): String
-    }
 
     val isSuccess: Boolean get() = this is Success
     val isLoading: Boolean get() = this is Loading
@@ -43,6 +45,24 @@ sealed class DataResult<D> {
                 is Success -> "Success($data)"
             }
         }"
+    }
+
+    inline fun onLoading(block: (D?) -> Unit): DataResult<D> {
+        if (this is Loading)
+            block(data)
+        return this
+    }
+
+    inline fun onSuccess(block: (D) -> Unit): DataResult<D> {
+        if (this is Success)
+            block(data)
+        return this
+    }
+
+    inline fun onFailure(block: (IError, D?) -> Unit): DataResult<D> {
+        if (this is Failure<D, IError>)
+            block(error, data)
+        return this
     }
 }
 
