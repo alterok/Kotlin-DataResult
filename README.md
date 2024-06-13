@@ -11,13 +11,12 @@ Here is an example of how you can use the DataResult class in your project:
 ```kotlin
 fun fetchData(): DataResult<String> {
     // Simulate loading state
-    val loadingResult: DataResult<String> = DataResult.Loading()
+    val loadingResult: DataResult<String> = DataResult.Loading("fetching...")
     // Simulate success state
-    val successResult: DataResult<String> = DataResult.Success("Data fetched successfully")
+    val successResult: DataResult<String> = DataResult.Success("Kotlin-DataResult is so awesome!")
     // Simulate failure state
     val failureResult: DataResult<String> = DataResult.Failure(NetworkResultError.NotFound)
 
-    // Your logic to handle these states
     return successResult
 }
 ```
@@ -25,25 +24,14 @@ Example of handling the DataResult in your UI classes or in any other class.
 
 ```kotlin
 fun handleResult(result: DataResult<String>) {
-    when (result) {
-        is DataResult.Loading -> {
-            // Handle loading state
-        }
-        is DataResult.Success -> {
-            // Handle success state
-        }
-        is DataResult.Failure -> {
-            // Handle failure state
-            when (result.error) {
-                is NetworkResultError.BadRequest -> {
-                    // Handle bad-request error
-                }
-                is NetworkResultError.NotFound -> {
-                    // Handle not-found error
-                }
-                // Handle other errors
-            }
-        }
+    result.onLoading { data ->
+        //do something in loading state
+    }
+    .onSuccess { data ->
+        //do something in success state
+    }
+    .onFailure { error, data ->
+        //do something in failure state
     }
 }
 ```
@@ -69,7 +57,7 @@ dependencyResolutionManagement {
    
 ```kotlin
 [versions]
-dataResult = 2.0.0
+dataResult = 2.0.1
 
 [libraries]
 dataResult = {group = "com.github.alterok", name = "Kotlin-DataResult", version.ref = "dataResult"}
