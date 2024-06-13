@@ -1,8 +1,11 @@
 package com.alterok.dataresult
 
+import com.alterok.dataresult.error.ExceptionResultError
+import javax.xml.crypto.Data
+
 sealed class DataResult<D> {
     interface IError {
-        fun getErrorMessage() : String
+        fun getErrorMessage(): String
         override fun toString(): String
     }
 
@@ -37,16 +40,6 @@ sealed class DataResult<D> {
         return transform(getOrNull())
     }
 
-    override fun toString(): String {
-        return "DataResult.${
-            when (this) {
-                is Failure<*, *> -> "Failure(${error} , $data)"
-                is Loading -> "Loading($data)"
-                is Success -> "Success($data)"
-            }
-        }"
-    }
-
     inline fun onLoading(block: (D?) -> Unit): DataResult<D> {
         if (this is Loading)
             block(data)
@@ -64,9 +57,26 @@ sealed class DataResult<D> {
             block(error, data)
         return this
     }
+
+    override fun toString(): String {
+        return "DataResult.${
+            when (this) {
+                is Loading -> "Loading($data)"
+                is Success -> "Success($data)"
+                is Failure<D, *> -> "Failure(${error} , $data)"
+            }
+        }"
+    }
 }
 
 fun <T> T?.wrapInLoadingDataResult() = DataResult.Loading(this)
 inline fun <reified T> T.wrapInSuccessDataResult() = DataResult.Success(this)
 fun <T> T?.wrapInFailureDataResult(error: DataResult.IError) = DataResult.Failure(error, this)
 
+inline fun <D> runCatchingForDataResult(block: () -> D): DataResult<D> {
+    return try {
+        DataResult.Success(block())
+    } catch (e: Exception) {
+        DataResult.Failure(ExceptionResultError(e))
+    }
+}
