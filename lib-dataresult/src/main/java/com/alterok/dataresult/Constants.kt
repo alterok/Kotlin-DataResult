@@ -9,5 +9,4 @@ object Constants {
     //PermissionResultError Constants
     const val ERROR_MSG_PERMISSION_DENIED = "Permission denied!"
     const val ERROR_MSG_PERMISSION_REVOKED = "Permission revoked!"
-
 }
