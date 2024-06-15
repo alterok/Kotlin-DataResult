@@ -13,7 +13,6 @@ import com.alterok.dataresult.error.ExceptionResultError
 sealed class DataResult<D> {
     interface IError {
         fun getErrorMessage(): String
-        override fun toString(): String
     }
 
     data class Loading<D>(val data: D? = null) : DataResult<D>()
@@ -67,14 +66,14 @@ sealed class DataResult<D> {
      * // mappedResult will be DataResult.Success("Hello") if innerData is non-null, otherwise DataResult.Failure
      * ```
      */
-    inline fun <R> map(transform: (D) -> R): DataResult<R> {
+    inline fun <R> map(transform: (D) -> R?): DataResult<R> {
         return when (this) {
             is Success -> {
                 val data: R? = transform(data)
                 if (data != null)
                     Success(data)
                 else
-                    Failure(ExceptionResultError(NullPointerException("Transformation in map() resulted in null data in Success state.")))
+                    Failure(ExceptionResultError.NullTransformation)
             }
 
             is Loading -> Loading(data?.let(transform))
@@ -160,7 +159,7 @@ sealed class DataResult<D> {
             when (this) {
                 is Loading -> "Loading($data)"
                 is Success -> "Success($data)"
-                is Failure<D, *> -> "Failure(${error} , $data)"
+                is Failure<D, *> -> "Failure(${error.getErrorMessage()} , $data)"
             }
         }"
     }
@@ -198,6 +197,6 @@ inline fun <D> runCatchingForDataResult(block: () -> D): DataResult<D> {
     return try {
         DataResult.Success(block())
     } catch (e: Exception) {
-        DataResult.Failure(ExceptionResultError(e))
+        DataResult.Failure(ExceptionResultError.Custom(e))
     }
 }
