@@ -21,7 +21,7 @@ sealed class DataResult<D> {
 
     val isSuccess: Boolean get() = this is Success
     val isLoading: Boolean get() = this is Loading
-    val isFailure: Boolean get() = this is IError
+    val isFailure: Boolean get() = this is Failure<D, IError>
 
     inline fun onLoading(block: (D?) -> Unit): DataResult<D> {
         if (this is Loading)
@@ -105,6 +105,14 @@ sealed class DataResult<D> {
      */
     inline fun <R> flatMap(transform: (D?) -> DataResult<R>): DataResult<R> {
         return transform(getOrNull())
+    }
+
+    inline fun <R> flatMap2(transform: DataResult<D>.(D?) -> DataResult<R>): DataResult<R> {
+        return transform(getOrNull())
+    }
+
+    inline fun <R> transform(transform: DataResult<D>.() -> DataResult<R>): DataResult<R> {
+        return transform()
     }
 
     /**
