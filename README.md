@@ -57,7 +57,7 @@ dependencyResolutionManagement {
    
 ```kotlin
 [versions]
-dataResult = 2.0.1
+dataResult = "2.2.1"
 
 [libraries]
 dataResult = {group = "com.github.alterok", name = "Kotlin-DataResult", version.ref = "dataResult"}

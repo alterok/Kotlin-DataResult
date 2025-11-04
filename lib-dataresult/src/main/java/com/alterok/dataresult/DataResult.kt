@@ -5,6 +5,7 @@ import com.alterok.dataresult.error.ExceptionResultError
 
 /**
  * Represents a result of an operation that can be in one of three states: Loading, Success or Failure.
+ * - [Idle] indicates no ongoing operation with optional data of type [D].
  * - [Loading] indicates ongoing operation with optional data of type [D].
  * - [Success] encapsulates successful operation with associated data of type [D].
  * - [Failure] signifies a failed operation with associated error of type [Error] and optional data of type [D].
@@ -16,13 +17,21 @@ sealed class DataResult<D> {
         fun getErrorMessage(): String
     }
 
+    data class Idle<D>(val data: D? = null) : DataResult<D>()
     data class Loading<D>(val data: D? = null) : DataResult<D>()
     data class Success<D>(val data: D, val code: Int = CODE_SUCCESS_OK) : DataResult<D>()
     data class Failure<D, out E : Error>(val error: E, val data: D? = null) : DataResult<D>()
 
-    val isSuccess: Boolean get() = this is Success
+    val isIdle: Boolean get() = this is Idle
     val isLoading: Boolean get() = this is Loading
+    val isSuccess: Boolean get() = this is Success
     val isFailure: Boolean get() = this is Failure<D, Error>
+
+    inline fun onIdle(block: (D?) -> Unit): DataResult<D> {
+        if (this is Loading)
+            block(data)
+        return this
+    }
 
     inline fun onLoading(block: (D?) -> Unit): DataResult<D> {
         if (this is Loading)
@@ -44,6 +53,7 @@ sealed class DataResult<D> {
 
     fun getOrNull(): D? {
         return when (this) {
+            is Idle -> data
             is Success -> data
             is Loading -> data
             is Failure<D, Error> -> data
@@ -52,8 +62,9 @@ sealed class DataResult<D> {
 
     fun getErrorOrNull(): Error? {
         return when (this) {
-            is Success -> null
+            is Idle -> null
             is Loading -> null
+            is Success -> null
             is Failure<D, Error> -> error
         }
     }
@@ -85,6 +96,7 @@ sealed class DataResult<D> {
                     Failure(ExceptionResultError.NullTransformation)
             }
 
+            is Idle -> Idle(data?.let(transform))
             is Loading -> Loading(data?.let(transform))
             is Failure<D, Error> -> Failure(
                 error = error,
@@ -177,14 +189,16 @@ sealed class DataResult<D> {
     override fun toString(): String {
         return "DataResult.${
             when (this) {
+                is Idle -> "Idle($data)"
                 is Loading -> "Loading($data)"
-                is Success -> "Success($data)"
+                is Success -> "Success($code | $data)"
                 is Failure<D, *> -> "Failure(${error.getErrorMessage()} , $data)"
             }
         }"
     }
 }
 
+fun <T> T?.wrapInIdleDataResult() = DataResult.Idle(this)
 fun <T> T?.wrapInLoadingDataResult() = DataResult.Loading(this)
 inline fun <reified T> T.wrapInSuccessDataResult(code: Int = CODE_SUCCESS_OK) = DataResult.Success(this, code)
 fun <T> T?.wrapInFailureDataResult(error: DataResult.Error) = DataResult.Failure(error, this)
