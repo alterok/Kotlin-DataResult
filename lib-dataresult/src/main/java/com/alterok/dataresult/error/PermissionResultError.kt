@@ -3,7 +3,7 @@ package com.alterok.dataresult.error
 import com.alterok.dataresult.Constants
 import com.alterok.dataresult.DataResult
 
-sealed class PermissionResultError(val message: String) : DataResult.IError {
+sealed class PermissionResultError(val message: String) : DataResult.Error {
     data object PermissionDenied : PermissionResultError(Constants.ERROR_MSG_PERMISSION_DENIED) {
         override fun getErrorMessage() = message
     }

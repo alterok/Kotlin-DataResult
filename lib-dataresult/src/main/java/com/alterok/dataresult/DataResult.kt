@@ -1,27 +1,28 @@
 package com.alterok.dataresult
 
+import com.alterok.dataresult.Constants.CODE_SUCCESS_OK
 import com.alterok.dataresult.error.ExceptionResultError
 
 /**
  * Represents a result of an operation that can be in one of three states: Loading, Success or Failure.
  * - [Loading] indicates ongoing operation with optional data of type [D].
  * - [Success] encapsulates successful operation with associated data of type [D].
- * - [Failure] signifies a failed operation with associated error of type [IError] and optional data of type [D].
+ * - [Failure] signifies a failed operation with associated error of type [Error] and optional data of type [D].
  *
  * @param D The type of data associated with Success, Loading, and Failure states.
  */
 sealed class DataResult<D> {
-    interface IError {
+    interface Error {
         fun getErrorMessage(): String
     }
 
     data class Loading<D>(val data: D? = null) : DataResult<D>()
-    data class Success<D>(val data: D) : DataResult<D>()
-    data class Failure<D, out E : IError>(val error: E, val data: D? = null) : DataResult<D>()
+    data class Success<D>(val data: D, val code: Int = CODE_SUCCESS_OK) : DataResult<D>()
+    data class Failure<D, out E : Error>(val error: E, val data: D? = null) : DataResult<D>()
 
     val isSuccess: Boolean get() = this is Success
     val isLoading: Boolean get() = this is Loading
-    val isFailure: Boolean get() = this is Failure<D, IError>
+    val isFailure: Boolean get() = this is Failure<D, Error>
 
     inline fun onLoading(block: (D?) -> Unit): DataResult<D> {
         if (this is Loading)
@@ -29,14 +30,14 @@ sealed class DataResult<D> {
         return this
     }
 
-    inline fun onSuccess(block: (D) -> Unit): DataResult<D> {
+    inline fun onSuccess(block: (D, Int) -> Unit): DataResult<D> {
         if (this is Success)
-            block(data)
+            block(data, code)
         return this
     }
 
-    inline fun onFailure(block: (IError, D?) -> Unit): DataResult<D> {
-        if (this is Failure<D, IError>)
+    inline fun onFailure(block: (Error, D?) -> Unit): DataResult<D> {
+        if (this is Failure<D, Error>)
             block(error, data)
         return this
     }
@@ -45,7 +46,15 @@ sealed class DataResult<D> {
         return when (this) {
             is Success -> data
             is Loading -> data
-            is Failure<D, IError> -> data
+            is Failure<D, Error> -> data
+        }
+    }
+
+    fun getErrorOrNull(): Error? {
+        return when (this) {
+            is Success -> null
+            is Loading -> null
+            is Failure<D, Error> -> error
         }
     }
 
@@ -77,7 +86,7 @@ sealed class DataResult<D> {
             }
 
             is Loading -> Loading(data?.let(transform))
-            is Failure<D, IError> -> Failure(
+            is Failure<D, Error> -> Failure(
                 error = error,
                 data = data?.let(transform)
             )
@@ -115,6 +124,7 @@ sealed class DataResult<D> {
         return transform()
     }
 
+
     /**
      * Applies a recovery function `transform` to convert a `Failure` into a `Success` state.
      * If the `DataResult` is already in a `Success` or 'Loading' state, it remains unchanged.
@@ -131,9 +141,9 @@ sealed class DataResult<D> {
      * // recoveredResult will be DataResult.Success("Recovered value from error: Error message")
      * ```
      */
-    inline fun recover(transform: (error: IError) -> D): DataResult<D> {
+    inline fun recover(transform: (error: Error) -> D): DataResult<D> {
         return when (this) {
-            is Failure<D, IError> -> Success(transform(error))
+            is Failure<D, Error> -> Success(transform(error))
             else -> this
         }
     }
@@ -154,13 +164,15 @@ sealed class DataResult<D> {
      * // recoveredResult will be DataResult.Success("Recovered value from error: Error message")
      * ```
      */
-    inline fun recoverWith(transform: (error: IError) -> DataResult<D>): DataResult<D> {
+    inline fun recoverWith(transform: (error: Error) -> DataResult<D>): DataResult<D> {
         return if (isFailure) {
-            transform((this as Failure<D, IError>).error)
+            transform((this as Failure<D, Error>).error)
         } else {
             this
         }
     }
+
+    fun Success<D>.withCode(code: Int) = Success(this.data, code)
 
     override fun toString(): String {
         return "DataResult.${
@@ -174,9 +186,9 @@ sealed class DataResult<D> {
 }
 
 fun <T> T?.wrapInLoadingDataResult() = DataResult.Loading(this)
-inline fun <reified T> T.wrapInSuccessDataResult() = DataResult.Success(this)
-fun <T> T?.wrapInFailureDataResult(error: DataResult.IError) = DataResult.Failure(error, this)
-fun <D> DataResult.IError.wrapErrorInFailureDataResult(data: D? = null) =
+inline fun <reified T> T.wrapInSuccessDataResult(code: Int = CODE_SUCCESS_OK) = DataResult.Success(this, code)
+fun <T> T?.wrapInFailureDataResult(error: DataResult.Error) = DataResult.Failure(error, this)
+fun <D> DataResult.Error.wrapErrorInFailureDataResult(data: D? = null) =
     DataResult.Failure(this, data)
 
 /**

@@ -3,7 +3,7 @@ package com.alterok.dataresult.error
 import com.alterok.dataresult.Constants
 import com.alterok.dataresult.DataResult
 
-sealed class FileResultError(val message: String) : DataResult.IError {
+sealed class FileResultError(val message: String) : DataResult.Error {
     data object FileNotFound : FileResultError(Constants.ERROR_MSG_FILE_NOT_FOUND) {
         override fun getErrorMessage(): String = message
     }
