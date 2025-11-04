@@ -10,6 +10,9 @@ Here is an example of how you can use the DataResult class in your project:
 
 ```kotlin
 fun fetchData(): DataResult<String> {
+
+    // Simulate idle state
+    val idleResult: DataResult<String> = DataResult.Idle("Idling...")
     // Simulate loading state
     val loadingResult: DataResult<String> = DataResult.Loading("fetching...")
     // Simulate success state
@@ -24,10 +27,12 @@ Example of handling the DataResult in your UI classes or in any other class.
 
 ```kotlin
 fun handleResult(result: DataResult<String>) {
-    result.onLoading { data ->
+    result.onIdle{data ->
+        //do something in idle state
+    }.onLoading { data ->
         //do something in loading state
     }
-    .onSuccess { data ->
+    .onSuccess { data, code ->
         //do something in success state
     }
     .onFailure { error, data ->
